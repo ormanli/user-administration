@@ -1,31 +1,40 @@
 package com.serdarormanli.useradministration.util;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
 import com.github.cage.Cage;
 import com.github.cage.YCage;
 import com.serdarormanli.useradministration.exception.InvalidCaptchaException;
+import com.serdarormanli.useradministration.model.Captcha;
+import com.serdarormanli.useradministration.repository.CaptchaRepository;
 
+/***
+ * Singleton captcha generator
+ * @author Serdar ORMANLI
+ *
+ */
+@Service
+@Scope("singleton")
 public class CaptchaGenerator {
 
-	private ConcurrentHashMap<String, String> captchaList = new ConcurrentHashMap<String, String>();
+	@Autowired
+	CaptchaRepository captchaRepository;
 
-	private CaptchaGenerator() {
-	}
-
-	private static class SingletonHolder {
-		private static final CaptchaGenerator INSTANCE = new CaptchaGenerator();
-	}
-
-	public static CaptchaGenerator getInstance() {
-		return SingletonHolder.INSTANCE;
-	}
-
+	/***
+	 * Generates a captcha and saves to database
+	 * 
+	 * @return {"ID"=id of captcha,"VALUE"=base64 encoded image}
+	 * @throws Exception
+	 */
 	public synchronized HashMap<String, String> getCaptcha() throws Exception {
 		Cage cage = new YCage();
 
@@ -37,20 +46,32 @@ public class CaptchaGenerator {
 		result.put("ID", id);
 		result.put("VALUE", new StringBuffer("data:image/gif;base64,").append(Base64.encodeBase64String(c)).toString());
 
-		captchaList.put(id, captchaValue);
+		captchaRepository.save(new Captcha(id, captchaValue, Base64.encodeBase64String(c), new Date()));
 
 		return result;
 	}
 
-	public synchronized boolean checkCaptcha(String id, String value) throws Exception {
-		boolean result = captchaList.containsKey(id) && StringUtils.equals(captchaList.get(id), value);
+	/***
+	 * Checks value of given captcha, if wrong throws
+	 * {@link InvalidCaptchaException}
+	 * 
+	 * @param id
+	 *            of captcha
+	 * @param value
+	 *            to check
+	 * @throws Exception
+	 */
 
-		captchaList.remove(id);
+	public synchronized void checkCaptcha(String id, String value) throws Exception {
+		boolean result = true;
+
+		result = result && captchaRepository.exists(id);
+		result = result && StringUtils.equals(captchaRepository.findOne(id).getValue(), value);
+
+		captchaRepository.delete(id);
 
 		if (!result) {
 			throw new InvalidCaptchaException("You entered wrong value!");
 		}
-
-		return result;
 	}
 }

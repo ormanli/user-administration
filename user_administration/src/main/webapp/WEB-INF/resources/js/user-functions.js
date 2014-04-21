@@ -1,7 +1,6 @@
 $(document).ready(function() {
 	$('#phoneNumber').mask('(000) 000-0000');
 
-
 	var name = $("#name"),
 		surname = $("#surname"),
 		phoneNumber = $("#phoneNumber"),
@@ -52,11 +51,8 @@ $(document).ready(function() {
 				var bValid = true;
 				allFields.removeClass("ui-state-error");
 
-				bValid = bValid && checkLength($("#name"),
-					"name", 3, 16);
-				bValid = bValid && checkLength($("#surname"),
-					"surname", 3,
-				16);
+				bValid = bValid && checkLength($("#name"), "name", 3, 16);
+				bValid = bValid && checkLength($("#surname"), "surname", 3, 16);
 
 				if (bValid) {
 
@@ -148,6 +144,16 @@ $(document).ready(function() {
 		},
 		formCreated: function(event, data) {
 			data.form.find('[name=phoneNumber]').mask('(000) 000-0000');
+			data.form.find('input[name="name"]').addClass('validate[required]');
+			data.form.find('input[name="surname"]').addClass('validate[required]');
+			data.form.validationEngine();
+		},
+		formSubmitting: function(event, data) {
+			return data.form.validationEngine('validate');
+		},
+		formClosed: function(event, data) {
+			data.form.validationEngine('hide');
+			data.form.validationEngine('detach');
 		}
 	});
 

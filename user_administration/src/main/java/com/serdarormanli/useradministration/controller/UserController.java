@@ -26,12 +26,21 @@ import com.serdarormanli.useradministration.model.User;
 import com.serdarormanli.useradministration.service.UserService;
 import com.serdarormanli.useradministration.util.CaptchaGenerator;
 
+/***
+ * Main controller for this application
+ * 
+ * @author Serdar Ormanlı
+ * 
+ */
 @Controller
 public class UserController {
 	private static final String HOME_VIEW = "home";
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private CaptchaGenerator captchaGenerator;
 
 	@ModelAttribute("user")
 	public User prepareUserModel() {
@@ -45,6 +54,11 @@ public class UserController {
 		return HOME_VIEW;
 	}
 
+	/***
+	 * Returns user list.
+	 * 
+	 * @return user list as json
+	 */
 	@RequestMapping(value = "/users/getlist", method = RequestMethod.POST)
 	@ResponseBody
 	public String showUserList() {
@@ -64,6 +78,14 @@ public class UserController {
 		return resultJson;
 	}
 
+	/***
+	 * Gets name, surname, phonenumber and captcha as json. Does validation and
+	 * inserts database.
+	 * 
+	 * @param requestJson
+	 * @param session
+	 * @return result json
+	 */
 	@RequestMapping(value = "/users/insert", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public String insertUser(@RequestBody String requestJson, HttpSession session) {
@@ -75,7 +97,7 @@ public class UserController {
 			map = mapper.readValue(requestJson, new TypeReference<HashMap<String, String>>() {
 			});
 
-			CaptchaGenerator.getInstance().checkCaptcha((String) session.getAttribute("captchaId"), map.get("captchaValue"));
+			captchaGenerator.checkCaptcha((String) session.getAttribute("captchaId"), map.get("captchaValue"));
 
 			if (StringUtils.isBlank(map.get("name")) || StringUtils.isBlank(map.get("surname"))) {
 				throw new Exception("Name or surname is Empty");
@@ -107,6 +129,12 @@ public class UserController {
 		return HOME_VIEW;
 	}
 
+	/***
+	 * User update operation
+	 * 
+	 * @param updatedUser
+	 * @return result json
+	 */
 	@RequestMapping(value = "/users/update", method = RequestMethod.POST)
 	@ResponseBody
 	public String updateUser(User updatedUser) {
@@ -124,6 +152,13 @@ public class UserController {
 		return resultJson;
 	}
 
+	/***
+	 * User delete operation
+	 * 
+	 * @param user
+	 *            id
+	 * @return result json
+	 */
 	@RequestMapping(value = "/users/delete", method = RequestMethod.POST)
 	@ResponseBody
 	public String deleteUser(@RequestParam("id") String id) {
@@ -141,13 +176,19 @@ public class UserController {
 		return resultJson;
 	}
 
+	/***
+	 * Generates a captcha and sets id to session.
+	 * 
+	 * @param session
+	 * @return base64 encoded value of captcha
+	 */
 	@RequestMapping(value = "/captcha", method = RequestMethod.GET)
 	@ResponseBody
 	public String getCaptcha(HttpSession session) {
 		HashMap<String, String> result;
 
 		try {
-			result = CaptchaGenerator.getInstance().getCaptcha();
+			result = captchaGenerator.getCaptcha();
 			session.setAttribute("captchaId", result.get("ID"));
 			return result.get("VALUE");
 		} catch (Exception e) {
@@ -166,6 +207,11 @@ public class UserController {
 		return modelAndView;
 	}
 
+	/***
+	 * Generates a result map with ok status
+	 * 
+	 * @return map with OK result
+	 */
 	private Map<String, String> getResultMap() {
 		Map<String, String> resultMap = new HashMap<String, String>();
 		resultMap.put("Result", "OK");

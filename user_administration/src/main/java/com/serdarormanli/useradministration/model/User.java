@@ -5,6 +5,11 @@ import java.io.Serializable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+/***
+ * User class for user information
+ * @author Serdar ORMANLI
+ *
+ */
 @Document(collection = "users")
 public class User implements Serializable {
 

@@ -8,6 +8,11 @@ import org.springframework.stereotype.Service;
 import com.serdarormanli.useradministration.model.User;
 import com.serdarormanli.useradministration.repository.UserRepository;
 
+/***
+ * Simple service class for {@link User} database operations
+ * @author Serdar ORMANLI
+ *
+ */
 @Service("userServiceImpl")
 public class UserServiceImpl implements UserService {
 	@Autowired
@@ -19,7 +24,6 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	// TODO validation koy
 	public User insertNewUser(User newUser) {
 		return userRepository.save(newUser);
 	}
